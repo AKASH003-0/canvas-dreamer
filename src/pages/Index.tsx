@@ -66,56 +66,56 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-primary relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-fire relative overflow-hidden">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-pink rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" />
-        <div className="absolute top-40 right-10 w-72 h-72 bg-mustard rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-1000" />
-        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-tangerine rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-2000" />
+        <div className="absolute top-20 left-10 w-96 h-96 bg-lavender rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-pulse" />
+        <div className="absolute top-40 right-10 w-96 h-96 bg-red-passion rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-pulse delay-1000" />
+        <div className="absolute -bottom-8 left-20 w-96 h-96 bg-teal rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-pulse delay-2000" />
       </div>
 
       {/* Main content */}
       <div className="relative z-10 container mx-auto px-4 py-8 md:py-16">
         {/* Header */}
         <div className="text-center mb-12 space-y-4">
-          <div className="inline-flex items-center gap-2 bg-secondary/20 backdrop-blur-sm px-4 py-2 rounded-full mb-4">
-            <Sparkles className="w-4 h-4 text-mustard animate-pulse" />
-            <span className="text-sm font-medium text-secondary-foreground">AI-Powered Image Generation</span>
+          <div className="inline-flex items-center gap-2 bg-teal/30 backdrop-blur-sm px-4 py-2 rounded-full mb-4 border border-lavender/30">
+            <Sparkles className="w-4 h-4 text-red-passion animate-pulse" />
+            <span className="text-sm font-semibold text-foreground tracking-wide">AI-POWERED IMAGE GENERATION</span>
           </div>
           
-          <h1 className="text-5xl md:text-7xl font-black bg-gradient-warm bg-clip-text text-transparent leading-tight">
-            Create Stunning
+          <h1 className="text-6xl md:text-8xl font-black bg-gradient-primary bg-clip-text text-transparent leading-tight tracking-tight">
+            CREATE STUNNING
             <br />
-            AI Images
+            AI IMAGES
           </h1>
           
-          <p className="text-lg md:text-xl text-foreground/80 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-foreground/70 max-w-2xl mx-auto font-medium">
             Transform your ideas into beautiful artwork with advanced AI technology
           </p>
         </div>
 
         {/* Main Generator Card */}
-        <Card className="max-w-4xl mx-auto p-6 md:p-8 bg-card/95 backdrop-blur-lg shadow-glow border-2 border-primary/20">
+        <Card className="max-w-4xl mx-auto p-6 md:p-8 bg-card/95 backdrop-blur-lg shadow-glow border-2 border-lavender/30">
           <div className="space-y-6">
             {/* Prompt Input */}
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <Wand2 className="w-4 h-4 text-primary" />
+              <label className="text-sm font-bold text-foreground flex items-center gap-2 uppercase tracking-wider">
+                <Wand2 className="w-4 h-4 text-lavender" />
                 Describe Your Image
               </label>
               <Textarea
                 placeholder="e.g., A serene mountain landscape at sunset with vibrant colors..."
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                className="min-h-32 text-base bg-background border-2 border-border focus:border-primary transition-all resize-none"
+                className="min-h-32 text-base bg-background border-2 border-border focus:border-lavender focus:ring-2 focus:ring-lavender/20 transition-all resize-none font-space"
               />
             </div>
 
             {/* Style Selector */}
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground">Art Style</label>
+              <label className="text-sm font-bold text-foreground uppercase tracking-wider">Art Style</label>
               <Select value={style} onValueChange={setStyle}>
-                <SelectTrigger className="w-full bg-background border-2 border-border hover:border-primary transition-all">
+                <SelectTrigger className="w-full bg-background border-2 border-border hover:border-lavender focus:ring-2 focus:ring-lavender/20 transition-all font-space">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -132,7 +132,7 @@ const Index = () => {
             <Button
               onClick={handleGenerate}
               disabled={isGenerating || !prompt.trim()}
-              className="w-full h-14 text-lg font-bold bg-gradient-warm hover:opacity-90 transition-all shadow-warm hover:shadow-glow disabled:opacity-50"
+              className="w-full h-14 text-lg font-black uppercase tracking-wider bg-gradient-primary hover:opacity-90 transition-all shadow-glow hover:shadow-red disabled:opacity-50 border-2 border-lavender/30"
               size="lg"
             >
               {isGenerating ? (
@@ -152,10 +152,10 @@ const Index = () => {
 
         {/* Generated Image Display */}
         {generatedImage && (
-          <Card className="max-w-4xl mx-auto mt-8 p-6 bg-card/95 backdrop-blur-lg shadow-glow border-2 border-primary/20 animate-in fade-in duration-500">
+          <Card className="max-w-4xl mx-auto mt-8 p-6 bg-card/95 backdrop-blur-lg shadow-glow border-2 border-lavender/30 animate-in fade-in duration-500">
             <div className="space-y-4">
-              <h3 className="text-xl font-bold text-foreground">Your Generated Image</h3>
-              <div className="relative rounded-lg overflow-hidden shadow-warm">
+              <h3 className="text-xl font-black text-foreground uppercase tracking-wider">Your Generated Image</h3>
+              <div className="relative rounded-lg overflow-hidden shadow-red border-2 border-lavender/20">
                 <img
                   src={generatedImage}
                   alt="Generated artwork"
@@ -171,7 +171,7 @@ const Index = () => {
                   toast.success("Image downloaded!");
                 }}
                 variant="outline"
-                className="w-full border-2 border-primary hover:bg-primary hover:text-primary-foreground transition-all"
+                className="w-full h-12 font-bold uppercase tracking-wider border-2 border-lavender hover:bg-lavender hover:text-background transition-all"
               >
                 Download Image
               </Button>
@@ -181,11 +181,11 @@ const Index = () => {
 
         {/* Watermark */}
         <div className="text-center mt-12 space-y-2">
-          <p className="text-sm text-foreground/60">
+          <p className="text-sm text-foreground/60 font-medium uppercase tracking-widest">
             Powered by Advanced AI Technology
           </p>
-          <p className="text-xs font-semibold text-foreground/80 flex items-center justify-center gap-2">
-            <span className="text-primary">©</span>
+          <p className="text-sm font-black text-foreground flex items-center justify-center gap-2 uppercase tracking-wider">
+            <span className="text-red-passion">©</span>
             <span>Created by AKASH</span>
           </p>
         </div>

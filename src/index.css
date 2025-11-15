@@ -8,53 +8,52 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* GenZ Color Palette - HSL Values */
-    --background: 38 34% 88%; /* Seashell #EAE4DA */
-    --foreground: 0 3% 11%; /* Muted Black #1D1D1B */
+    /* GenZ Dark Color Palette - HSL Values */
+    --background: 0 3% 11%; /* Muted Black #1D1D1B */
+    --foreground: 0 0% 95%; /* Light text */
 
-    --card: 38 34% 88%;
-    --card-foreground: 0 3% 11%;
+    --card: 0 3% 15%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 38 34% 88%;
-    --popover-foreground: 0 3% 11%;
+    --popover: 0 3% 15%;
+    --popover-foreground: 0 0% 95%;
 
     --primary: 234 35% 63%; /* Lavender Blue #808BC5 */
-    --primary-foreground: 38 34% 88%;
+    --primary-foreground: 0 3% 11%;
 
     --secondary: 179 42% 21%; /* Deep Teal #245655 */
-    --secondary-foreground: 38 34% 88%;
+    --secondary-foreground: 0 0% 95%;
 
-    --muted: 38 34% 82%;
-    --muted-foreground: 0 3% 35%;
+    --muted: 0 3% 20%;
+    --muted-foreground: 0 0% 65%;
 
-    --accent: 186 67% 72%; /* Sky Mist #9ED6DF */
-    --accent-foreground: 0 3% 11%;
+    --accent: 1 57% 51%; /* Red Passion #C63F3E */
+    --accent-foreground: 0 0% 95%;
 
     --destructive: 1 57% 51%; /* Red Passion #C63F3E */
-    --destructive-foreground: 38 34% 88%;
+    --destructive-foreground: 0 0% 95%;
 
-    --tangerine: 18 75% 58%; /* Tangerine #ED773C */
-    --mustard: 46 87% 51%; /* Mustard Yellow #EAC119 */
-    --pink: 339 62% 79%; /* Pink Quartz #EAA7C7 */
     --teal: 179 42% 21%;
-    --sky: 186 67% 72%;
+    --lavender: 234 35% 63%;
+    --red-passion: 1 57% 51%;
     
-    --border: 38 25% 75%;
-    --input: 38 25% 75%;
+    --border: 0 3% 25%;
+    --input: 0 3% 20%;
     --ring: 234 35% 63%;
 
     --radius: 1rem;
 
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(234 35% 63%), hsl(186 67% 72%));
-    --gradient-warm: linear-gradient(135deg, hsl(18 75% 58%), hsl(46 87% 51%));
+    /* Gradients - Mixed GenZ Vibes */
+    --gradient-primary: linear-gradient(135deg, hsl(234 35% 63%), hsl(1 57% 51%));
     --gradient-cool: linear-gradient(135deg, hsl(179 42% 21%), hsl(234 35% 63%));
-    --gradient-overlay: linear-gradient(180deg, transparent, hsl(0 3% 11% / 0.3));
+    --gradient-fire: linear-gradient(135deg, hsl(1 57% 51%), hsl(234 35% 63%));
+    --gradient-overlay: linear-gradient(180deg, transparent, hsl(0 3% 11% / 0.5));
 
     /* Shadows */
-    --shadow-glow: 0 8px 32px hsl(234 35% 63% / 0.3);
-    --shadow-warm: 0 8px 24px hsl(18 75% 58% / 0.25);
-    --shadow-soft: 0 4px 16px hsl(0 3% 11% / 0.1);
+    --shadow-glow: 0 10px 40px hsl(234 35% 63% / 0.4);
+    --shadow-red: 0 10px 40px hsl(1 57% 51% / 0.3);
+    --shadow-teal: 0 10px 40px hsl(179 42% 21% / 0.3);
+    --shadow-soft: 0 4px 20px hsl(0 3% 0% / 0.3);
 
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -63,28 +62,28 @@ All colors MUST be HSL.
 
   .dark {
     --background: 0 3% 11%;
-    --foreground: 38 34% 88%;
+    --foreground: 0 0% 95%;
 
     --card: 0 3% 15%;
-    --card-foreground: 38 34% 88%;
+    --card-foreground: 0 0% 95%;
 
     --popover: 0 3% 15%;
-    --popover-foreground: 38 34% 88%;
+    --popover-foreground: 0 0% 95%;
 
     --primary: 234 35% 63%;
     --primary-foreground: 0 3% 11%;
 
     --secondary: 179 42% 28%;
-    --secondary-foreground: 38 34% 88%;
+    --secondary-foreground: 0 0% 95%;
 
     --muted: 0 3% 20%;
-    --muted-foreground: 38 20% 65%;
+    --muted-foreground: 0 0% 65%;
 
-    --accent: 186 67% 72%;
-    --accent-foreground: 0 3% 11%;
+    --accent: 1 57% 51%;
+    --accent-foreground: 0 0% 95%;
 
     --destructive: 1 57% 51%;
-    --destructive-foreground: 38 34% 88%;
+    --destructive-foreground: 0 0% 95%;
 
     --border: 0 3% 25%;
     --input: 0 3% 25%;
@@ -98,6 +97,10 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-space;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-sora;
   }
 }
