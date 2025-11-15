@@ -13,6 +13,10 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        'space': ['Space Grotesk', 'sans-serif'],
+        'sora': ['Sora', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -47,21 +51,20 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        tangerine: "hsl(var(--tangerine))",
-        mustard: "hsl(var(--mustard))",
-        pink: "hsl(var(--pink))",
         teal: "hsl(var(--teal))",
-        sky: "hsl(var(--sky))",
+        lavender: "hsl(var(--lavender))",
+        "red-passion": "hsl(var(--red-passion))",
       },
       backgroundImage: {
         'gradient-primary': 'var(--gradient-primary)',
-        'gradient-warm': 'var(--gradient-warm)',
         'gradient-cool': 'var(--gradient-cool)',
+        'gradient-fire': 'var(--gradient-fire)',
         'gradient-overlay': 'var(--gradient-overlay)',
       },
       boxShadow: {
         'glow': 'var(--shadow-glow)',
-        'warm': 'var(--shadow-warm)',
+        'red': 'var(--shadow-red)',
+        'teal': 'var(--shadow-teal)',
         'soft': 'var(--shadow-soft)',
       },
       borderRadius: {
