@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { HfInference } from 'https://esm.sh/@huggingface/inference@2.8.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -58,24 +57,42 @@ serve(async (req) => {
     const styleModifier = styleModifiers[style] || styleModifiers['realistic'];
     const enhancedPrompt = `${prompt}, ${styleModifier}`;
 
-    console.log('Generating image with Hugging Face FLUX model:', enhancedPrompt);
+    console.log('Generating image with Hugging Face FLUX model via router:', enhancedPrompt);
 
-    const hf = new HfInference(HUGGING_FACE_TOKEN);
+    const endpoint = 'https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell';
 
-    const image = await hf.textToImage({
-      inputs: enhancedPrompt,
-      model: 'black-forest-labs/FLUX.1-schnell',
+    const hfResponse = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${HUGGING_FACE_TOKEN}`,
+        'Content-Type': 'application/json',
+        'Accept': 'image/png'
+      },
+      body: JSON.stringify({ inputs: enhancedPrompt })
     });
 
-    // Convert the blob to a base64 string
-    const arrayBuffer = await image.arrayBuffer();
+    if (!hfResponse.ok) {
+      const errorText = await hfResponse.text();
+      console.error('Hugging Face error:', hfResponse.status, errorText);
+      const status = hfResponse.status === 429 ? 429 : 500;
+      const errMsg = hfResponse.status === 429
+        ? 'Rate limit exceeded by Hugging Face. Please try again later.'
+        : 'Failed to generate image via Hugging Face';
+      return new Response(
+        JSON.stringify({ error: errMsg, details: errorText }),
+        {
+          status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    const arrayBuffer = await hfResponse.arrayBuffer();
     const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
     return new Response(
       JSON.stringify({ image: `data:image/png;base64,${base64}` }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
