@@ -41,70 +41,35 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      console.error('LOVABLE_API_KEY is not configured');
-      return new Response(
-        JSON.stringify({ error: 'AI service not configured' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
     // Enhance prompt with style modifier
     const styleModifier = styleModifiers[style] || styleModifiers['realistic'];
-    const enhancedPrompt = `Generate an image: ${prompt}, ${styleModifier}`;
+    const enhancedPrompt = `${prompt}, ${styleModifier}`;
 
-    console.log('Generating image with Lovable AI:', enhancedPrompt);
+    console.log('Generating image with Pollinations.ai FLUX:', enhancedPrompt);
 
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-image-preview',
-        messages: [
-          {
-            role: 'user',
-            content: enhancedPrompt
-          }
-        ],
-        modalities: ['image', 'text']
-      })
-    });
+    // Use Pollinations.ai - completely free, no API key needed
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?model=flux&width=1024&height=1024&nologo=true&enhance=true`;
 
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error('Lovable AI error:', aiResponse.status, errorText);
+    // Fetch the image to verify it was generated successfully
+    const imageResponse = await fetch(imageUrl);
+    
+    if (!imageResponse.ok) {
+      console.error('Pollinations.ai error:', imageResponse.status);
       return new Response(
-        JSON.stringify({ error: 'Failed to generate image', details: errorText }),
+        JSON.stringify({ error: 'Failed to generate image' }),
         {
-          status: aiResponse.status,
+          status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
 
-    const data = await aiResponse.json();
-    const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-
-    if (!imageUrl) {
-      console.error('No image returned from AI');
-      return new Response(
-        JSON.stringify({ error: 'No image generated' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
+    // Convert to base64 for consistent response format
+    const arrayBuffer = await imageResponse.arrayBuffer();
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
     return new Response(
-      JSON.stringify({ image: imageUrl }),
+      JSON.stringify({ image: `data:image/png;base64,${base64}` }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
