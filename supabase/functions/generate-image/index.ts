@@ -11,15 +11,15 @@ interface RequestBody {
 }
 
 const styleModifiers: Record<string, string> = {
-  'realistic': 'photorealistic, highly detailed, professional photography',
-  'comic': 'comic book style, bold lines, vibrant colors, graphic novel art',
-  'oil-painting': 'oil painting style, brush strokes, classical art, museum quality',
-  'sketch': 'pencil sketch, hand-drawn, artistic sketch, black and white line art',
-  'pencil-art': 'detailed pencil drawing, graphite art, realistic shading, fine art',
-  'cartoon': 'cartoon style, animated, colorful, fun illustration',
-  'anime': 'anime style, manga art, Japanese animation style',
-  'watercolor': 'watercolor painting, soft colors, artistic, flowing paint',
-  'digital-art': 'digital art, modern illustration, contemporary style',
+  'realistic': 'photorealistic, highly detailed, professional photography, ultra high resolution',
+  'comic': 'comic book style, bold lines, vibrant colors, graphic novel art, ultra high resolution',
+  'oil-painting': 'oil painting style, brush strokes, classical art, museum quality, ultra high resolution',
+  'sketch': 'pencil sketch, hand-drawn, artistic sketch, black and white line art, ultra high resolution',
+  'pencil-art': 'detailed pencil drawing, graphite art, realistic shading, fine art, ultra high resolution',
+  'cartoon': 'cartoon style, animated, colorful, fun illustration, ultra high resolution',
+  'anime': 'anime style, manga art, Japanese animation style, ultra high resolution',
+  'watercolor': 'watercolor painting, soft colors, artistic, flowing paint, ultra high resolution',
+  'digital-art': 'digital art, modern illustration, contemporary style, ultra high resolution',
 };
 
 serve(async (req) => {
@@ -41,9 +41,9 @@ serve(async (req) => {
       );
     }
 
-    const HUGGING_FACE_TOKEN = Deno.env.get('HUGGING_FACE_ACCESS_TOKEN');
-    if (!HUGGING_FACE_TOKEN) {
-      console.error('HUGGING_FACE_ACCESS_TOKEN is not configured');
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      console.error('LOVABLE_API_KEY is not configured');
       return new Response(
         JSON.stringify({ error: 'AI service not configured' }),
         { 
@@ -55,43 +55,56 @@ serve(async (req) => {
 
     // Enhance prompt with style modifier
     const styleModifier = styleModifiers[style] || styleModifiers['realistic'];
-    const enhancedPrompt = `${prompt}, ${styleModifier}`;
+    const enhancedPrompt = `Generate an image: ${prompt}, ${styleModifier}`;
 
-    console.log('Generating image with Hugging Face FLUX model via router:', enhancedPrompt);
+    console.log('Generating image with Lovable AI:', enhancedPrompt);
 
-    const endpoint = 'https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell';
-
-    const hfResponse = await fetch(endpoint, {
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${HUGGING_FACE_TOKEN}`,
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
-        'Accept': 'image/png'
       },
-      body: JSON.stringify({ inputs: enhancedPrompt })
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash-image-preview',
+        messages: [
+          {
+            role: 'user',
+            content: enhancedPrompt
+          }
+        ],
+        modalities: ['image', 'text']
+      })
     });
 
-    if (!hfResponse.ok) {
-      const errorText = await hfResponse.text();
-      console.error('Hugging Face error:', hfResponse.status, errorText);
-      const status = hfResponse.status === 429 ? 429 : 500;
-      const errMsg = hfResponse.status === 429
-        ? 'Rate limit exceeded by Hugging Face. Please try again later.'
-        : 'Failed to generate image via Hugging Face';
+    if (!aiResponse.ok) {
+      const errorText = await aiResponse.text();
+      console.error('Lovable AI error:', aiResponse.status, errorText);
       return new Response(
-        JSON.stringify({ error: errMsg, details: errorText }),
+        JSON.stringify({ error: 'Failed to generate image', details: errorText }),
         {
-          status,
+          status: aiResponse.status,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
 
-    const arrayBuffer = await hfResponse.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    const data = await aiResponse.json();
+    const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+
+    if (!imageUrl) {
+      console.error('No image returned from AI');
+      return new Response(
+        JSON.stringify({ error: 'No image generated' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
 
     return new Response(
-      JSON.stringify({ image: `data:image/png;base64,${base64}` }),
+      JSON.stringify({ image: imageUrl }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
