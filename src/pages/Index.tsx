@@ -24,6 +24,7 @@ const Index = () => {
   const [style, setStyle] = useState("realistic");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [isImageLoading, setIsImageLoading] = useState(false);
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -52,8 +53,8 @@ const Index = () => {
       }
 
       if (data?.image) {
+        setIsImageLoading(true);
         setGeneratedImage(data.image);
-        toast.success("Image generated successfully!");
       } else {
         toast.error("No image was generated. Please try again.");
       }
@@ -156,10 +157,27 @@ const Index = () => {
             <div className="space-y-4">
               <h3 className="text-xl font-black text-foreground uppercase tracking-wider">Your Generated Image</h3>
               <div className="relative rounded-lg overflow-hidden shadow-red border-2 border-lavender/20">
+                {isImageLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
+                    <div className="text-center space-y-3">
+                      <Loader2 className="w-12 h-12 animate-spin text-lavender mx-auto" />
+                      <p className="text-sm font-bold text-foreground/70 uppercase tracking-wider">Loading image...</p>
+                      <p className="text-xs text-foreground/50">This may take 10-30 seconds</p>
+                    </div>
+                  </div>
+                )}
                 <img
                   src={generatedImage}
                   alt="Generated artwork"
                   className="w-full h-auto"
+                  onLoad={() => {
+                    setIsImageLoading(false);
+                    toast.success("Image generated successfully!");
+                  }}
+                  onError={() => {
+                    setIsImageLoading(false);
+                    toast.error("Failed to load image. Try again.");
+                  }}
                 />
               </div>
               <Button
@@ -172,6 +190,7 @@ const Index = () => {
                 }}
                 variant="outline"
                 className="w-full h-12 font-bold uppercase tracking-wider border-2 border-lavender hover:bg-lavender hover:text-background transition-all"
+                disabled={isImageLoading}
               >
                 Download Image
               </Button>
