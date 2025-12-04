@@ -48,35 +48,13 @@ serve(async (req) => {
     console.log('Generating image with Pollinations.ai FLUX:', enhancedPrompt);
 
     // Use Pollinations.ai - completely free, no API key needed
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?model=flux&width=1024&height=1024&nologo=true&enhance=true`;
+    // Return the URL directly - client will load the image
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?model=flux&width=1024&height=1024&nologo=true&enhance=true&seed=${Date.now()}`;
 
-    // Fetch the image to verify it was generated successfully
-    const imageResponse = await fetch(imageUrl);
-    
-    if (!imageResponse.ok) {
-      console.error('Pollinations.ai error:', imageResponse.status);
-      return new Response(
-        JSON.stringify({ error: 'Failed to generate image' }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // Convert to base64 for consistent response format - use chunked approach to avoid stack overflow
-    const arrayBuffer = await imageResponse.arrayBuffer();
-    const bytes = new Uint8Array(arrayBuffer);
-    let binary = '';
-    const chunkSize = 8192;
-    for (let i = 0; i < bytes.length; i += chunkSize) {
-      const chunk = bytes.subarray(i, i + chunkSize);
-      binary += String.fromCharCode(...chunk);
-    }
-    const base64 = btoa(binary);
+    console.log('Generated Pollinations URL:', imageUrl);
 
     return new Response(
-      JSON.stringify({ image: `data:image/png;base64,${base64}` }),
+      JSON.stringify({ image: imageUrl }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
