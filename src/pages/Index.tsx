@@ -4,19 +4,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { Loader2, Sparkles, Wand2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const artStyles = [
-  { value: "realistic", label: "Realistic" },
-  { value: "comic", label: "Comic" },
-  { value: "oil-painting", label: "Oil Painting" },
-  { value: "sketch", label: "Sketch" },
-  { value: "pencil-art", label: "Pencil Art" },
-  { value: "cartoon", label: "Cartoon" },
-  { value: "anime", label: "Anime" },
-  { value: "watercolor", label: "Watercolor" },
-  { value: "digital-art", label: "Digital Art" },
+  { value: "realistic", label: "Realistic", modifier: "photorealistic, highly detailed, professional photography, 8k" },
+  { value: "comic", label: "Comic", modifier: "comic book style, bold lines, vibrant colors, graphic novel art" },
+  { value: "oil-painting", label: "Oil Painting", modifier: "oil painting style, brush strokes, classical art, museum quality" },
+  { value: "sketch", label: "Sketch", modifier: "pencil sketch, hand-drawn, artistic sketch, black and white line art" },
+  { value: "pencil-art", label: "Pencil Art", modifier: "detailed pencil drawing, graphite art, realistic shading" },
+  { value: "cartoon", label: "Cartoon", modifier: "cartoon style, animated, colorful, fun illustration" },
+  { value: "anime", label: "Anime", modifier: "anime style, manga art, Japanese animation style" },
+  { value: "watercolor", label: "Watercolor", modifier: "watercolor painting, soft colors, artistic, flowing paint" },
+  { value: "digital-art", label: "Digital Art", modifier: "digital art, modern illustration, contemporary style" },
 ];
 
 const Index = () => {
@@ -34,33 +33,20 @@ const Index = () => {
 
     setIsGenerating(true);
     setGeneratedImage(null);
+    setIsImageLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('generate-image', {
-        body: { prompt, style }
-      });
-
-      if (error) {
-        console.error('Edge function error:', error);
-        if (error.message?.includes('429')) {
-          toast.error("Rate limit exceeded. Please try again in a moment.");
-        } else if (error.message?.includes('402')) {
-          toast.error("AI credits exhausted. Please add more credits in Settings.");
-        } else {
-          toast.error("Failed to generate image. Please try again.");
-        }
-        return;
-      }
-
-      if (data?.image) {
-        setIsImageLoading(true);
-        setGeneratedImage(data.image);
-      } else {
-        toast.error("No image was generated. Please try again.");
-      }
+      const selectedStyle = artStyles.find(s => s.value === style);
+      const enhancedPrompt = `${prompt.trim()}, ${selectedStyle?.modifier || ''}`;
+      
+      // Direct Pollinations.ai URL - FREE, UNLIMITED, NO API KEY
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?model=flux&width=1024&height=1024&nologo=true&seed=${Date.now()}`;
+      
+      setGeneratedImage(imageUrl);
     } catch (err) {
       console.error('Generate error:', err);
       toast.error("An unexpected error occurred");
+      setIsImageLoading(false);
     } finally {
       setIsGenerating(false);
     }
