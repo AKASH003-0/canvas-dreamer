@@ -64,9 +64,16 @@ serve(async (req) => {
       );
     }
 
-    // Convert to base64 for consistent response format
+    // Convert to base64 for consistent response format - use chunked approach to avoid stack overflow
     const arrayBuffer = await imageResponse.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    const bytes = new Uint8Array(arrayBuffer);
+    let binary = '';
+    const chunkSize = 8192;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      const chunk = bytes.subarray(i, i + chunkSize);
+      binary += String.fromCharCode(...chunk);
+    }
+    const base64 = btoa(binary);
 
     return new Response(
       JSON.stringify({ image: `data:image/png;base64,${base64}` }),
