@@ -25,23 +25,29 @@ const Index = () => {
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isImageLoading, setIsImageLoading] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [retryCount, setRetryCount] = useState(0);
+  const [generationPrompt, setGenerationPrompt] = useState("");
 
   // Timer effect for loading state
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval> | undefined;
+
     if (isImageLoading) {
       setElapsedTime(0);
       interval = setInterval(() => {
-        setElapsedTime(prev => prev + 1);
+        setElapsedTime((prev) => prev + 1);
       }, 1000);
     }
-    return () => clearInterval(interval);
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [isImageLoading]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
   const handleGenerate = async () => {
@@ -53,23 +59,31 @@ const Index = () => {
     setIsGenerating(true);
     setGeneratedImage(null);
     setIsImageLoading(true);
+    setRetryCount(0);
 
     try {
-      const selectedStyle = artStyles.find(s => s.value === style);
-      const enhancedPrompt = `${prompt.trim()}, ${selectedStyle?.modifier || ''}`;
-      
-      // Direct Pollinations.ai URL - FREE, UNLIMITED, NO API KEY
+      const selectedStyle = artStyles.find((s) => s.value === style);
+
+      // Keep URL length reasonable to avoid request failures
+      const basePrompt = prompt.trim().slice(0, 280);
+      setGenerationPrompt(basePrompt);
+
+      const styleModifier = (selectedStyle?.modifier || "").slice(0, 180);
+      const enhancedPrompt = `${basePrompt}${styleModifier ? `, ${styleModifier}` : ""}`;
+
+      // Direct Pollinations.ai URL - FREE, NO API KEY
       const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?model=flux&width=1024&height=1024&nologo=true&seed=${Date.now()}`;
-      
+
       setGeneratedImage(imageUrl);
     } catch (err) {
-      console.error('Generate error:', err);
+      console.error("Generate error:", err);
       toast.error("An unexpected error occurred");
       setIsImageLoading(false);
     } finally {
       setIsGenerating(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-fire relative overflow-hidden">
@@ -216,8 +230,20 @@ const Index = () => {
                     toast.success("Image generated successfully!");
                   }}
                   onError={() => {
+                    // Auto-retry once with a lighter prompt + smaller size (more reliable)
+                    if (retryCount < 1) {
+                      setRetryCount(1);
+                      setIsImageLoading(true);
+                      toast("Retrying… optimizing load");
+
+                      const fallbackPrompt = (generationPrompt || prompt.trim()).slice(0, 280);
+                      const fallbackUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(fallbackPrompt)}?model=flux&width=768&height=768&nologo=true&seed=${Date.now()}`;
+                      setGeneratedImage(fallbackUrl);
+                      return;
+                    }
+
                     setIsImageLoading(false);
-                    toast.error("Failed to load image. Try again.");
+                    toast.error("Failed to load image. Please generate again.");
                   }}
                 />
               </div>
