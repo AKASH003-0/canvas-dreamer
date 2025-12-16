@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-import { Loader2, Sparkles, Wand2 } from "lucide-react";
+import { Loader2, Sparkles, Wand2, Clock, Zap } from "lucide-react";
 import { toast } from "sonner";
 
 const artStyles = [
@@ -24,6 +24,25 @@ const Index = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isImageLoading, setIsImageLoading] = useState(false);
+  const [elapsedTime, setElapsedTime] = useState(0);
+
+  // Timer effect for loading state
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isImageLoading) {
+      setElapsedTime(0);
+      interval = setInterval(() => {
+        setElapsedTime(prev => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isImageLoading]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -144,11 +163,47 @@ const Index = () => {
               <h3 className="text-xl font-black text-foreground uppercase tracking-wider">Your Generated Image</h3>
               <div className="relative rounded-lg overflow-hidden shadow-red border-2 border-lavender/20">
                 {isImageLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
-                    <div className="text-center space-y-3">
-                      <Loader2 className="w-12 h-12 animate-spin text-lavender mx-auto" />
-                      <p className="text-sm font-bold text-foreground/70 uppercase tracking-wider">Loading image...</p>
-                      <p className="text-xs text-foreground/50">This may take 10-30 seconds</p>
+                  <div className="absolute inset-0 flex items-center justify-center bg-background/90 z-10 backdrop-blur-sm">
+                    <div className="text-center space-y-6 p-8">
+                      {/* Animated rings */}
+                      <div className="relative w-32 h-32 mx-auto">
+                        <div className="absolute inset-0 rounded-full border-4 border-lavender/20 animate-ping" />
+                        <div className="absolute inset-2 rounded-full border-4 border-teal/30 animate-pulse" />
+                        <div className="absolute inset-4 rounded-full border-4 border-red-passion/40 animate-spin" style={{ animationDuration: '3s' }} />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="text-center">
+                            <Clock className="w-8 h-8 text-lavender mx-auto mb-1 animate-pulse" />
+                            <span className="text-2xl font-black text-foreground tabular-nums tracking-wider">
+                              {formatTime(elapsedTime)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Status text */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-center gap-2">
+                          <Zap className="w-4 h-4 text-red-passion animate-pulse" />
+                          <p className="text-lg font-black text-foreground uppercase tracking-wider">
+                            AI Magic in Progress
+                          </p>
+                          <Zap className="w-4 h-4 text-red-passion animate-pulse" />
+                        </div>
+                        <p className="text-sm text-foreground/60 font-medium">
+                          Creating your masterpiece • Usually 10-30 seconds
+                        </p>
+                        
+                        {/* Progress bar */}
+                        <div className="w-64 mx-auto h-2 bg-background rounded-full overflow-hidden border border-lavender/30">
+                          <div 
+                            className="h-full bg-gradient-to-r from-lavender via-red-passion to-teal animate-pulse"
+                            style={{ 
+                              width: `${Math.min((elapsedTime / 30) * 100, 100)}%`,
+                              transition: 'width 1s ease-out'
+                            }}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
