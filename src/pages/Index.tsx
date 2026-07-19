@@ -258,7 +258,6 @@ const Index = () => {
                   className={`w-full h-auto min-h-[360px] object-cover transition-opacity duration-500 ${isImageLoading ? "opacity-0" : "opacity-100"}`}
                   loading="eager"
                   decoding="async"
-                  fetchPriority="high"
                   onLoad={() => {
                     if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
                     setIsImageLoading(false);
