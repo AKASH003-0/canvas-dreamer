@@ -18,6 +18,26 @@ const artStyles = [
   { value: "digital-art", label: "Digital Art", modifier: "digital art, modern illustration, contemporary style" },
 ];
 
+const imageRoutes = [
+  { model: "flux", width: 768, height: 768 },
+  { model: "flux", width: 512, height: 512 },
+  { model: "turbo", width: 512, height: 512 },
+  { model: "flux", width: 1024, height: 1024 },
+];
+
+const buildImageUrl = (imagePrompt: string, attempt: number) => {
+  const route = imageRoutes[attempt % imageRoutes.length];
+  const params = new URLSearchParams({
+    model: route.model,
+    width: String(route.width),
+    height: String(route.height),
+    nologo: "true",
+    seed: `${Date.now()}-${attempt}`,
+  });
+
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(imagePrompt)}?${params.toString()}`;
+};
+
 const Index = () => {
   const [prompt, setPrompt] = useState("");
   const [style, setStyle] = useState("realistic");
@@ -27,6 +47,7 @@ const Index = () => {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [retryCount, setRetryCount] = useState(0);
   const [generationPrompt, setGenerationPrompt] = useState("");
+  const [enhancedGenerationPrompt, setEnhancedGenerationPrompt] = useState("");
 
   // Timer effect for loading state
   useEffect(() => {
@@ -43,6 +64,26 @@ const Index = () => {
       if (interval) clearInterval(interval);
     };
   }, [isImageLoading]);
+
+  // If an image request hangs, silently switch to another route/model instead of showing an error.
+  useEffect(() => {
+    if (!isImageLoading || !generatedImage) return;
+
+    const timeout = setTimeout(() => {
+      setRetryCount((currentAttempt) => {
+        const nextAttempt = currentAttempt + 1;
+        const fallbackPrompt =
+          nextAttempt > 2
+            ? (generationPrompt || prompt.trim()).slice(0, 220)
+            : (enhancedGenerationPrompt || generationPrompt || prompt.trim()).slice(0, 420);
+
+        setGeneratedImage(buildImageUrl(fallbackPrompt, nextAttempt));
+        return nextAttempt;
+      });
+    }, 35000);
+
+    return () => clearTimeout(timeout);
+  }, [isImageLoading, generatedImage, enhancedGenerationPrompt, generationPrompt, prompt]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -70,11 +111,9 @@ const Index = () => {
 
       const styleModifier = (selectedStyle?.modifier || "").slice(0, 180);
       const enhancedPrompt = `${basePrompt}${styleModifier ? `, ${styleModifier}` : ""}`;
+      setEnhancedGenerationPrompt(enhancedPrompt);
 
-      // Direct Pollinations.ai URL - FREE, NO API KEY
-      const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?model=flux&width=1024&height=1024&nologo=true&seed=${Date.now()}`;
-
-      setGeneratedImage(imageUrl);
+      setGeneratedImage(buildImageUrl(enhancedPrompt, 0));
     } catch (err) {
       console.error("Generate error:", err);
       toast.error("An unexpected error occurred");
@@ -171,11 +210,11 @@ const Index = () => {
         </Card>
 
         {/* Generated Image Display */}
-        {generatedImage && (
+        {(generatedImage || isImageLoading) && (
           <Card className="max-w-4xl mx-auto mt-8 p-6 bg-card/95 backdrop-blur-lg shadow-glow border-2 border-lavender/30 animate-in fade-in duration-500">
             <div className="space-y-4">
               <h3 className="text-xl font-black text-foreground uppercase tracking-wider">Your Generated Image</h3>
-              <div className="relative rounded-lg overflow-hidden shadow-red border-2 border-lavender/20">
+              <div className="relative min-h-[360px] rounded-lg overflow-hidden shadow-red border-2 border-lavender/20 bg-background/60">
                 {isImageLoading && (
                   <div className="absolute inset-0 flex items-center justify-center bg-background/90 z-10 backdrop-blur-sm">
                     <div className="text-center space-y-6 p-8">
@@ -204,7 +243,9 @@ const Index = () => {
                           <Zap className="w-4 h-4 text-red-passion animate-pulse" />
                         </div>
                         <p className="text-sm text-foreground/60 font-medium">
-                          Creating your masterpiece • Usually 10-30 seconds
+                          {retryCount > 0
+                            ? `Still creating • Auto optimizing route ${retryCount + 1}`
+                            : "Creating your masterpiece • Usually 10-30 seconds"}
                         </p>
                         
                         {/* Progress bar */}
@@ -221,31 +262,26 @@ const Index = () => {
                     </div>
                   </div>
                 )}
-                <img
+                {generatedImage && <img
                   src={generatedImage}
                   alt="Generated artwork"
-                  className="w-full h-auto"
+                  className={`w-full h-auto min-h-[360px] object-cover transition-opacity duration-500 ${isImageLoading ? "opacity-0" : "opacity-100"}`}
                   onLoad={() => {
                     setIsImageLoading(false);
                     toast.success("Image generated successfully!");
                   }}
                   onError={() => {
-                    // Auto-retry once with a lighter prompt + smaller size (more reliable)
-                    if (retryCount < 1) {
-                      setRetryCount(1);
-                      setIsImageLoading(true);
-                      toast("Retrying… optimizing load");
+                    const nextAttempt = retryCount + 1;
+                    const fallbackPrompt =
+                      nextAttempt > 2
+                        ? (generationPrompt || prompt.trim()).slice(0, 220)
+                        : (enhancedGenerationPrompt || generationPrompt || prompt.trim()).slice(0, 420);
 
-                      const fallbackPrompt = (generationPrompt || prompt.trim()).slice(0, 280);
-                      const fallbackUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(fallbackPrompt)}?model=flux&width=768&height=768&nologo=true&seed=${Date.now()}`;
-                      setGeneratedImage(fallbackUrl);
-                      return;
-                    }
-
-                    setIsImageLoading(false);
-                    toast.error("Failed to load image. Please generate again.");
+                    setRetryCount(nextAttempt);
+                    setIsImageLoading(true);
+                    setGeneratedImage(buildImageUrl(fallbackPrompt, nextAttempt));
                   }}
-                />
+                />}
               </div>
               <Button
                 onClick={() => {
