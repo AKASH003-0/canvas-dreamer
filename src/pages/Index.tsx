@@ -246,8 +246,8 @@ const Index = () => {
                         </div>
                         <p className="text-sm text-foreground/60 font-medium">
                           {retryCount > 0
-                            ? `Still creating • Auto optimizing route ${retryCount + 1}`
-                            : "Creating your masterpiece • Usually 10-30 seconds"}
+                            ? `Boosting speed • Route ${retryCount + 1}`
+                            : "Creating your masterpiece • Usually 3-8 seconds"}
                         </p>
                         
                         {/* Progress bar */}
@@ -255,11 +255,12 @@ const Index = () => {
                           <div 
                             className="h-full bg-gradient-to-r from-lavender via-red-passion to-teal animate-pulse"
                             style={{ 
-                              width: `${Math.min((elapsedTime / 30) * 100, 100)}%`,
+                              width: `${Math.min((elapsedTime / 8) * 100, 100)}%`,
                               transition: 'width 1s ease-out'
                             }}
                           />
                         </div>
+
                       </div>
                     </div>
                   </div>
