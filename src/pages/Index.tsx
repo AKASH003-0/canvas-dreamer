@@ -89,6 +89,7 @@ const Index = () => {
     setGeneratedImage(null);
     setIsImageLoading(true);
     setRetryCount(0);
+    if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
 
     try {
       const selectedStyle = artStyles.find((s) => s.value === style);
@@ -233,7 +234,7 @@ const Index = () => {
                         <p className="text-sm text-foreground/60 font-medium">
                           {retryCount > 0
                             ? `Boosting speed • Route ${retryCount + 1}`
-                            : "Creating your masterpiece • Usually 3-8 seconds"}
+                            : "Fast model active • Queue stays connected"}
                         </p>
                         
                         {/* Progress bar */}
