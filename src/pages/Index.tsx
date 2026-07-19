@@ -65,6 +65,26 @@ const Index = () => {
     };
   }, [isImageLoading]);
 
+  // If an image request hangs, silently switch to another route/model instead of showing an error.
+  useEffect(() => {
+    if (!isImageLoading || !generatedImage) return;
+
+    const timeout = setTimeout(() => {
+      setRetryCount((currentAttempt) => {
+        const nextAttempt = currentAttempt + 1;
+        const fallbackPrompt =
+          nextAttempt > 2
+            ? (generationPrompt || prompt.trim()).slice(0, 220)
+            : (enhancedGenerationPrompt || generationPrompt || prompt.trim()).slice(0, 420);
+
+        setGeneratedImage(buildImageUrl(fallbackPrompt, nextAttempt));
+        return nextAttempt;
+      });
+    }, 35000);
+
+    return () => clearTimeout(timeout);
+  }, [isImageLoading, generatedImage, enhancedGenerationPrompt, generationPrompt, prompt]);
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
