@@ -19,10 +19,10 @@ const artStyles = [
 ];
 
 const imageRoutes = [
-  { model: "flux", width: 768, height: 768 },
-  { model: "flux", width: 512, height: 512 },
+  { model: "turbo", width: 768, height: 768 },
+  { model: "flux", width: 640, height: 640 },
   { model: "turbo", width: 512, height: 512 },
-  { model: "flux", width: 1024, height: 1024 },
+  { model: "flux", width: 512, height: 512 },
 ];
 
 const buildImageUrl = (imagePrompt: string, attempt: number) => {
@@ -32,6 +32,7 @@ const buildImageUrl = (imagePrompt: string, attempt: number) => {
     width: String(route.width),
     height: String(route.height),
     nologo: "true",
+    enhance: "true",
     seed: `${Date.now()}-${attempt}`,
   });
 
