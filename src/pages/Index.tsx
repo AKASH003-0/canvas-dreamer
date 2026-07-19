@@ -81,7 +81,8 @@ const Index = () => {
         setGeneratedImage(buildImageUrl(fallbackPrompt, nextAttempt));
         return nextAttempt;
       });
-    }, 35000);
+    }, 12000);
+
 
     return () => clearTimeout(timeout);
   }, [isImageLoading, generatedImage, enhancedGenerationPrompt, generationPrompt, prompt]);
