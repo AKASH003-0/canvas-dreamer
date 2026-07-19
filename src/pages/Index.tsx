@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -19,20 +19,20 @@ const artStyles = [
 ];
 
 const imageRoutes = [
-  { model: "turbo", width: 768, height: 768 },
-  { model: "flux", width: 640, height: 640 },
-  { model: "turbo", width: 512, height: 512 },
-  { model: "flux", width: 512, height: 512 },
+  { model: "sana", width: 512, height: 512, retryDelay: 5500 },
+  { model: "sana", width: 384, height: 384, retryDelay: 8000 },
+  { model: "flux", width: 384, height: 384, retryDelay: 11000 },
 ];
 
 const buildImageUrl = (imagePrompt: string, attempt: number) => {
-  const route = imageRoutes[attempt % imageRoutes.length];
+  const route = imageRoutes[Math.min(attempt, imageRoutes.length - 1)];
   const params = new URLSearchParams({
     model: route.model,
     width: String(route.width),
     height: String(route.height),
     nologo: "true",
-    enhance: "true",
+    nofeed: "true",
+    enhance: "false",
     seed: `${Date.now()}-${attempt}`,
   });
 
@@ -49,6 +49,7 @@ const Index = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [generationPrompt, setGenerationPrompt] = useState("");
   const [enhancedGenerationPrompt, setEnhancedGenerationPrompt] = useState("");
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Timer effect for loading state
   useEffect(() => {
@@ -66,26 +67,11 @@ const Index = () => {
     };
   }, [isImageLoading]);
 
-  // If an image request hangs, silently switch to another route/model instead of showing an error.
   useEffect(() => {
-    if (!isImageLoading || !generatedImage) return;
-
-    const timeout = setTimeout(() => {
-      setRetryCount((currentAttempt) => {
-        const nextAttempt = currentAttempt + 1;
-        const fallbackPrompt =
-          nextAttempt > 2
-            ? (generationPrompt || prompt.trim()).slice(0, 220)
-            : (enhancedGenerationPrompt || generationPrompt || prompt.trim()).slice(0, 420);
-
-        setGeneratedImage(buildImageUrl(fallbackPrompt, nextAttempt));
-        return nextAttempt;
-      });
-    }, 12000);
-
-
-    return () => clearTimeout(timeout);
-  }, [isImageLoading, generatedImage, enhancedGenerationPrompt, generationPrompt, prompt]);
+    return () => {
+      if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
+    };
+  }, []);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -108,10 +94,10 @@ const Index = () => {
       const selectedStyle = artStyles.find((s) => s.value === style);
 
       // Keep URL length reasonable to avoid request failures
-      const basePrompt = prompt.trim().slice(0, 280);
+      const basePrompt = prompt.trim().slice(0, 220);
       setGenerationPrompt(basePrompt);
 
-      const styleModifier = (selectedStyle?.modifier || "").slice(0, 180);
+      const styleModifier = (selectedStyle?.modifier || "").slice(0, 120);
       const enhancedPrompt = `${basePrompt}${styleModifier ? `, ${styleModifier}` : ""}`;
       setEnhancedGenerationPrompt(enhancedPrompt);
 
@@ -192,8 +178,8 @@ const Index = () => {
             {/* Generate Button */}
             <Button
               onClick={handleGenerate}
-              disabled={isGenerating || !prompt.trim()}
-              className="w-full h-14 text-lg font-black uppercase tracking-wider bg-gradient-primary hover:opacity-90 transition-all shadow-glow hover:shadow-red disabled:opacity-50 border-2 border-lavender/30"
+              disabled={isGenerating || isImageLoading || !prompt.trim()}
+              className="w-full h-14 text-lg font-black uppercase tracking-wider bg-gradient-primary hover:opacity-90 transition-all shadow-glow hover:shadow-red disabled:opacity-50 border-2 border-lavender/30 active:scale-[0.98]"
               size="lg"
             >
               {isGenerating ? (
@@ -255,7 +241,7 @@ const Index = () => {
                           <div 
                             className="h-full bg-gradient-to-r from-lavender via-red-passion to-teal animate-pulse"
                             style={{ 
-                              width: `${Math.min((elapsedTime / 8) * 100, 100)}%`,
+                              width: `${Math.min((elapsedTime / 18) * 100, 100)}%`,
                               transition: 'width 1s ease-out'
                             }}
                           />
@@ -269,20 +255,29 @@ const Index = () => {
                   src={generatedImage}
                   alt="Generated artwork"
                   className={`w-full h-auto min-h-[360px] object-cover transition-opacity duration-500 ${isImageLoading ? "opacity-0" : "opacity-100"}`}
+                  loading="eager"
+                  decoding="async"
+                  fetchPriority="high"
                   onLoad={() => {
+                    if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
                     setIsImageLoading(false);
                     toast.success("Image generated successfully!");
                   }}
                   onError={() => {
-                    const nextAttempt = retryCount + 1;
+                    const nextAttempt = Math.min(retryCount + 1, imageRoutes.length - 1);
+                    const route = imageRoutes[nextAttempt];
                     const fallbackPrompt =
-                      nextAttempt > 2
-                        ? (generationPrompt || prompt.trim()).slice(0, 220)
-                        : (enhancedGenerationPrompt || generationPrompt || prompt.trim()).slice(0, 420);
+                      nextAttempt > 0
+                        ? (generationPrompt || prompt.trim()).slice(0, 180)
+                        : (enhancedGenerationPrompt || generationPrompt || prompt.trim()).slice(0, 260);
 
                     setRetryCount(nextAttempt);
                     setIsImageLoading(true);
-                    setGeneratedImage(buildImageUrl(fallbackPrompt, nextAttempt));
+
+                    if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
+                    retryTimeoutRef.current = setTimeout(() => {
+                      setGeneratedImage(buildImageUrl(fallbackPrompt, nextAttempt));
+                    }, route.retryDelay);
                   }}
                 />}
               </div>
